@@ -14,10 +14,12 @@ Date: 2026-09-17
 - uv: 0.12.16 (x86_64-apple-darwin)
 - Homebrew: 7.0.1 — Intel now Tier 3, bottles no longer routinely built
 - Python: 3.11.16
+- Project path: ~/Desktop/dev/aimodel-lab (venv rebuilt after move;
+  venvs hard-code absolute paths and break if relocated)
 
 ## PyTorch
 - torch 2.2.2 installed and functional.
-- numpy installed (needed for golden .npy files, Session 14)
+- numpy 1.26.4 (pinned <2; torch 2.2.2 predates the NumPy 2.x ABI)
 - This is the last macOS x86_64 release; PyTorch dropped Intel Mac
   wheels at 2.3.0 (April 2024).
 - Current torch (2.11.0) ships: manylinux_2_28_aarch64,
