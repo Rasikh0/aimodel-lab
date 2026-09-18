@@ -1,0 +1,50 @@
+name: probe
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  probe:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Architecture
+        if: always()
+        run: uname -m
+
+      - name: macOS version
+        if: always()
+        run: sw_vers
+
+      - name: Hardware
+        if: always()
+        run: system_profiler SPHardwareDataType
+
+      - name: CPU and memory
+        if: always()
+        run: |
+          sysctl hw.memsize
+          sysctl -n hw.ncpu
+          sysctl hw.optional.arm64 || echo "arm64 flag not present"
+
+      - name: Disk
+        if: always()
+        run: df -h
+
+      - name: Xcode
+        if: always()
+        run: |
+          xcodebuild -version
+          xcrun --sdk macosx --show-sdk-version
+
+      - name: Swift
+        if: always()
+        run: swift --version
+
+      - name: Python
+        if: always()
+        run: |
+          python3 --version
+          python3 -m pip --version
