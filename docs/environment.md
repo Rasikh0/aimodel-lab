@@ -17,6 +17,7 @@ Date: 2026-09-17
 
 ## PyTorch
 - torch 2.2.2 installed and functional.
+- numpy installed (needed for golden .npy files, Session 14)
 - This is the last macOS x86_64 release; PyTorch dropped Intel Mac
   wheels at 2.3.0 (April 2024).
 - Current torch (2.11.0) ships: manylinux_2_28_aarch64,
