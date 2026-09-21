@@ -1,0 +1,75 @@
+name: probe-coreai
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  probe-coreai:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Python in use
+        if: always()
+        run: |
+          which python3
+          python3 --version
+
+      - name: Install uv
+        if: always()
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install coreai-torch and coreai-opt
+        if: always()
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install coreai-torch coreai-opt
+
+      - name: Versions
+        if: always()
+        run: python3 -m pip list | grep -i -E "coreai|torch|numpy"
+
+      - name: Import test
+        if: always()
+        run: |
+          python3 -c "import coreai_torch; print('coreai_torch', coreai_torch.__version__)"
+          python3 -c "import coreai_opt; print('coreai_opt OK')"
+          python3 -c "import torch; print('torch', torch.__version__)"
+
+      - name: Clone coreai-models
+        if: always()
+        run: git clone --depth 1 https://github.com/apple/coreai-models.git
+
+      - name: Model registry
+        if: always()
+        working-directory: coreai-models
+        run: uv run coreai.model.registry --list-models
+
+      - name: Registry help
+        if: always()
+        working-directory: coreai-models
+        run: uv run coreai.model.registry --help
+
+      - name: SDK frameworks
+        if: always()
+        run: |
+          SDK=$(xcrun --sdk macosx --show-sdk-path)
+          echo "SDK: $SDK"
+          ls "$SDK/System/Library/Frameworks" | grep -i -E "coreai|foundationmodels" || echo "NOT FOUND in SDK"
+
+      - name: Swift import test
+        if: always()
+        run: |
+          echo 'import CoreAI' > /tmp/t.swift
+          swiftc -typecheck /tmp/t.swift && echo "CoreAI import OK" || echo "CoreAI import FAILED"
+
+      - name: coreai-build tool
+        if: always()
+        run: xcrun coreai-build --help || echo "coreai-build NOT AVAILABLE"
