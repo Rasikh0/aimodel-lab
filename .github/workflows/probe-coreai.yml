@@ -30,7 +30,7 @@ jobs:
         if: always()
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install coreai-torch coreai-opt
+          python3 -m pip install coreai-torch==0.4.2 coreai-opt==0.2.1
 
       - name: Versions
         if: always()
