@@ -14,50 +14,22 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Neural Engine present?
-        if: always()
-        run: |
-          echo "--- AppleH11ANEInterface ---"
-          ioreg -rc AppleH11ANEInterface 2>/dev/null | head -20 || echo "not found"
-          echo "--- AppleNeuralEngine ---"
-          ioreg -rc AppleNeuralEngine 2>/dev/null | head -20 || echo "not found"
-          echo "--- device tree ANE nodes ---"
-          ioreg -p IODeviceTree -l -w 0 2>/dev/null | grep -i -w "ane" || echo "no ANE nodes"
-
-      - name: Metal probe
-        if: always()
-        run: |
-          swiftc -O scripts/metal_probe.swift -o /tmp/metal_probe
-          /tmp/metal_probe
-
       - name: Install Core AI toolchain
         if: always()
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install coreai-torch==0.4.2 coreai-opt==0.2.1
 
-      - name: API introspection
-        if: always()
-        run: python3 scripts/probe_compute.py
-
-      - name: Find the runtime module
+      - name: Runtime API surface
         if: always()
         run: |
-          python3 - <<'PY'
-          import importlib, pkgutil
-          for name in ("coreai", "coreai_core", "coreaicore", "CoreAI"):
-              try:
-                  m = importlib.import_module(name)
-                  print(f"OK {name}: {[n for n in dir(m) if not n.startswith('_')][:40]}")
-              except Exception as e:
-                  print(f"FAIL {name}: {e}")
-          print("--- top-level modules matching coreai ---")
-          for mod in pkgutil.iter_modules():
-              if "coreai" in mod.name.lower():
-                  print(" ", mod.name)
-          PY
-
-      - name: What did pip actually install?
-        if: always()
-        run: |
-          python3 -m pip show -f coreai-core | head -40
+          echo "--- top-level public names ---"
+          python3 -c "import coreai; print([n for n in dir(coreai) if not n.startswith('_')])"
+          echo "--- submodules ---"
+          python3 -c "
+          import coreai, pkgutil
+          for m in pkgutil.iter_modules(coreai.__path__):
+              print(' ', m.name)
+          "
+          echo "--- non-compiler files ---"
+          python3 -m pip show -f coreai-core | grep -E "^  coreai/" | grep -v "__pycache__" | grep -v "_compiler" | head -60
