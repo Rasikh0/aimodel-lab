@@ -14,23 +14,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Available Xcodes
-        if: always()
-        run: ls /Applications | grep -i xcode || echo "none found"
-
       - name: Neural Engine present?
         if: always()
         run: |
-          echo "--- AppleH11ANEInterface (the actual ANE driver class) ---"
+          echo "--- AppleH11ANEInterface ---"
           ioreg -rc AppleH11ANEInterface 2>/dev/null | head -20 || echo "not found"
           echo "--- AppleNeuralEngine ---"
           ioreg -rc AppleNeuralEngine 2>/dev/null | head -20 || echo "not found"
           echo "--- device tree ANE nodes ---"
-          ioreg -p IODeviceTree -l -w 0 2>/dev/null | grep -i -w "ane" || echo "no ANE nodes in device tree"
-
-      - name: GPU present?
-        if: always()
-        run: system_profiler SPDisplaysDataType || echo "no display data"
+          ioreg -p IODeviceTree -l -w 0 2>/dev/null | grep -i -w "ane" || echo "no ANE nodes"
 
       - name: Metal probe
         if: always()
@@ -47,3 +39,25 @@ jobs:
       - name: API introspection
         if: always()
         run: python3 scripts/probe_compute.py
+
+      - name: Find the runtime module
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import importlib, pkgutil
+          for name in ("coreai", "coreai_core", "coreaicore", "CoreAI"):
+              try:
+                  m = importlib.import_module(name)
+                  print(f"OK {name}: {[n for n in dir(m) if not n.startswith('_')][:40]}")
+              except Exception as e:
+                  print(f"FAIL {name}: {e}")
+          print("--- top-level modules matching coreai ---")
+          for mod in pkgutil.iter_modules():
+              if "coreai" in mod.name.lower():
+                  print(" ", mod.name)
+          PY
+
+      - name: What did pip actually install?
+        if: always()
+        run: |
+          python3 -m pip show -f coreai-core | head -40
