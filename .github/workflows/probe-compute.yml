@@ -1,0 +1,44 @@
+name: probe-compute
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  probe-compute:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Available Xcodes
+        if: always()
+        run: ls /Applications | grep -i xcode || echo "none found"
+
+      - name: Neural Engine present?
+        if: always()
+        run: |
+          ioreg -l | grep -i -E "ane|neural" || echo "NO ANE ENTRIES IN IOREG"
+
+      - name: GPU present?
+        if: always()
+        run: system_profiler SPDisplaysDataType || echo "no display data"
+
+      - name: Metal probe
+        if: always()
+        run: |
+          swiftc -O scripts/metal_probe.swift -o /tmp/metal_probe
+          /tmp/metal_probe
+
+      - name: Install Core AI toolchain
+        if: always()
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install coreai-torch==0.4.2 coreai-opt==0.2.1
+
+      - name: API introspection
+        if: always()
+        run: python3 scripts/probe_compute.py
