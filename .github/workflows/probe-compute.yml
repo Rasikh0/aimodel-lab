@@ -21,7 +21,12 @@ jobs:
       - name: Neural Engine present?
         if: always()
         run: |
-          ioreg -l | grep -i -E "ane|neural" || echo "NO ANE ENTRIES IN IOREG"
+          echo "--- AppleH11ANEInterface (the actual ANE driver class) ---"
+          ioreg -rc AppleH11ANEInterface 2>/dev/null | head -20 || echo "not found"
+          echo "--- AppleNeuralEngine ---"
+          ioreg -rc AppleNeuralEngine 2>/dev/null | head -20 || echo "not found"
+          echo "--- device tree ANE nodes ---"
+          ioreg -p IODeviceTree -l -w 0 2>/dev/null | grep -i -w "ane" || echo "no ANE nodes in device tree"
 
       - name: GPU present?
         if: always()
