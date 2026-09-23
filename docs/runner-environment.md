@@ -78,3 +78,50 @@ The entire "Image, Text, Audio" table ships UNCOMPRESSED. Compression
 analysis on any of those 17 is unexplored even where Apple has a recipe.
 Possible reframe: not "a model Apple missed" but "a model Apple ships
 with no compression story."
+
+## Session 4 — Compute units (2026-09-23)
+
+### Available
+- CPU: yes
+- GPU: yes. Metal device "Apple Paravirtual device", unified memory,
+  max buffer 3.5 GB, command queue OK. torch mps also available.
+  CAVEAT: paravirtual. Absolute numbers will not match bare metal;
+  relative comparisons between configs should hold. Disclose in 
+methodology.
+- ANE: no. No AppleH11ANEInterface, no AppleNeuralEngine, no device-tree
+  ANE nodes. NVRAM "ane-type" marked not present.
+
+### Xcode
+14 Xcodes on the image, all 26.x. No Xcode 27 anywhere.
+The Swift gap from Session 3 is structural, not configuration.
+Phase 4 needs a macos-27 runner label or external contributors.
+
+### Core AI Python API — the important finding
+Import name is `coreai`, NOT `coreai_core`. Lazy namespace package,
+so dir(coreai) is empty; import submodules directly.
+
+Submodules: _compiler, _version, authoring, runtime, utils
+
+coreai.runtime contains:
+  _aimodel.py                      load .aimodel files
+  _inference_function.py           run inference
+  _specialization_options.py       likely compute unit selection
+  _coreai_runtime.cpython-312-darwin.so    compiled runtime
+  _coreai_runtime_os.cpython-312-darwin.so
+
+=> .aimodel files CAN be loaded and executed from Python on this runner.
+   Phases 1-3 need no Swift. Benchmarking plan is viable as designed.
+
+coreai_torch exposes conversion only (TorchConverter, ExternalizeSpec,
+MetalParameter, get_decomp_table) - no compute unit selection there.
+
+coreai_opt.ExportBackend has members: CoreAI, CoreML.
+=> a CoreML fallback path exists if needed.
+
+coremltools 9.0 available, ComputeUnit enum: CPU_ONLY, CPU_AND_GPU,
+CPU_AND_NE, ALL. Fallback for compute-unit-specific benchmarking.
+
+### Next
+Session 5-7 are applications and referrals. Before Session 11, read
+coreai/runtime/_specialization_options.py to learn how compute units
+are selected.
