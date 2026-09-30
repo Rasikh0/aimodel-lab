@@ -1,6 +1,6 @@
 1. nn.Module
    A Python object. Lives in memory. Contains weights as tensors and a
-   forward() method that is arbitrary Python — loops, conditionals, whatever.
+   forward() method that is arbitrary Python: loops, conditionals.
    Cannot be shipped anywhere, because running it requires Python and PyTorch.
 
 2. torch.export(model, args)  →  ExportedProgram
@@ -19,8 +19,8 @@
 
 5. serialization  →  .aimodel
    A file on disk. Graph plus weights plus metadata. This is the shippable
-   artifact — the thing you'd bundle with an app, or in your case, the thing
-   you benchmark.
+   artifact, the thing you'd bundle with an app, or in my case, the thing
+   I benchmark.
 
 6. first load  →  specialized form
    Core AI compiles the .aimodel for the specific chip it's running on.
